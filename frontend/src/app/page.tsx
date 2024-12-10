@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { auth } from "./firebase/firebase-config";
 import callProtectedAPI from "./utils/callProtectAPI";
 
 export default function Page() {
-  const [user, setUser] = useState<null | { displayName: string | null; email: string | null }>(null);
+  const [user, setUser] = useState<null | { displayName: string | null; email: string | null; provider: string | null }>(null);
   const [apiResponse, setApiResponse] = useState<null | string>(null);
   const [error, setError] = useState<null | string>(null);
 
@@ -14,9 +14,11 @@ export default function Page() {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
+        const providerId = currentUser.providerData[0]?.providerId || null;
         setUser({
           displayName: currentUser.displayName,
           email: currentUser.email,
+          provider: providerId,
         });
       } else {
         setUser(null);
@@ -36,11 +38,31 @@ export default function Page() {
       setUser({
         displayName: loggedInUser.displayName,
         email: loggedInUser.email,
+        provider: "Google",
       });
 
-      console.log("Logged in:", loggedInUser);
+      console.log("Logged in with Google:", loggedInUser);
     } catch (error) {
       console.error("Google Login Failed:", error);
+    }
+  };
+
+  // GitHubログインを実行
+  const handleGithubLogin = async () => {
+    const provider = new GithubAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const loggedInUser = result.user;
+
+      setUser({
+        displayName: loggedInUser.displayName,
+        email: loggedInUser.email,
+        provider: "GitHub",
+      });
+
+      console.log("Logged in with GitHub:", loggedInUser);
+    } catch (error) {
+      console.error("GitHub Login Failed:", error);
     }
   };
 
@@ -77,6 +99,7 @@ export default function Page() {
         <div>
           <p>Welcome, {user.displayName || "User"}!</p>
           <p>Email: {user.email}</p>
+          <p>Logged in with: {user.provider}</p>
           <button onClick={handleCallAPI}>Call Protected API</button>
           <button onClick={handleLogout} style={{ marginLeft: "10px" }}>
             Logout
@@ -86,6 +109,8 @@ export default function Page() {
         <div>
           <p>Please log in to access the protected API.</p>
           <button onClick={handleGoogleLogin}>Login with Google</button>
+          <button onClick={handleGithubLogin} style={{ marginLeft: "10px" }}>
+            Login with GitHub</button>
         </div>
       )}
 
