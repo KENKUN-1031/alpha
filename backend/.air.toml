@@ -1,0 +1,16 @@
+# Airの設定ファイル
+
+# ビルド設定
+[build]
+  cmd = "go build -o main ."
+  bin = "main"
+  full_bin = "./main"
+
+# ウォッチするディレクトリやファイルの設定
+[watch]
+  extensions = [".go", ".tpl", ".tmpl", ".html"]
+  exclude_dir = ["vendor", "node_modules"]
+
+# その他の設定
+[log]
+  level = "debug"
